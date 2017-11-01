@@ -48,10 +48,12 @@ public class Board
     /*------------------------------------------------------------------------------------
 		Instance Properties
 	------------------------------------------------------------------------------------*/
-    SysGeneric.List<SysGeneric.List<char>> _board { get; set; }
-    int _moveCount { get; set; }
-    string _moves { get; set; }
-    SysGeneric.List<int> _piecesInColumn { get; set; }
+    private SysGeneric.List<SysGeneric.List<char>> _board { get; set; }
+    private int _moveCount { get; set; }
+    private string _moves { get; set; }
+    private SysGeneric.List<int> _piecesInColumn { get; set; }
+    public bool _isRoundOver { get; set; }
+
 
     /*------------------------------------------------------------------------------------
 		Constructors & Destructors
@@ -78,6 +80,11 @@ public class Board
         _moveCount = 0;
         _moves = "";
         _piecesInColumn = new SysGeneric.List<int>(BOARD_WIDTH);
+        for (int eachColumn = 0; eachColumn < BOARD_WIDTH; eachColumn++)
+        {
+            _piecesInColumn.Add(0);
+        }
+        _isRoundOver = false;
     }
 
     /*------------------------------------------------------------------------------------
@@ -87,17 +94,26 @@ public class Board
         Tries to make a particular move on the game board.
         Returns whether or not the move was made.
     */
-    //public bool TryMove(char piece, int column)
-    //{
-    //    if (IsMoveValid(column))
-    //    {
-    //        _board[]
+    public bool TryMove(char piece, int column)
+    {
+        /* Fail if the round is over. */
+        if (_isRoundOver)
+        {
+            System.Console.Write("Can't play a move because the round is already over.\n");
+            return false;
+        }
 
-    //        return true;
-    //    }
+        /* Fail if the column is already full. */
+        if (!IsMoveValid(column))
+        {
+            return false;
+        }
 
-    //    return false;
-    //}
+        /* Play the move. */
+        PlayMove(piece, column);
+
+        return true;
+    }
 
     public bool IsMoveValid(int column)
     {
@@ -119,12 +135,81 @@ public class Board
         return true;
     }
 
+    /**
+        Plays the given move.
+        Only moves that return true when passed to IsMoveValid() should be passed to this method.
+    */
+    private void PlayMove(char piece, int column)
+    {
+        /* Check if this move will end the game. */
+        if (_moveCount == MAX_MOVES_IN_GAME - 1 || 
+            IsWinningMove(piece, column))
+        {
+            _isRoundOver = true;
+        }
+
+        /* Play the move. */
+        _board[column][_piecesInColumn[column]] = piece;
+        _moveCount++;
+        _moves += column;
+        _piecesInColumn[column]++;
+    }
+
+    /**
+        Checks if the given move is a winning move.
+        Only moves that return true when passed to IsMoveValid() should be passed to this method.
+    */
+    public bool IsWinningMove(char piece, int column)
+    {
+        /* If the three pieces below the one to be placed are of the same type, 
+            then this move is a vertical win. */
+        if (_piecesInColumn[column] >= 3 && 
+            _board[column][_piecesInColumn[column] - 1] == piece &&
+            _board[column][_piecesInColumn[column] - 2] == piece &&
+            _board[column][_piecesInColumn[column] - 3] == piece)
+        {
+            return true;
+        }
+
+        /* Check horizontal and diagonal wins. */
+        for (int verticalOffset = -1; verticalOffset <= 1; verticalOffset++)                // For spaces above and below the move...
+        {
+            int adjacentCount = 0;
+
+            for (int horizontalOffset = -1; horizontalOffset <= 1; horizontalOffset += 2)   // For spaces to the left and right of the move...
+            {
+                for (int cellX = column + horizontalOffset,                                 // For each cell to check...
+                     cellY = _piecesInColumn[column] + (horizontalOffset * verticalOffset);
+                     cellX >= 0 &&                                                          // If we're inside the bounds of the board...
+                     cellX < BOARD_WIDTH &&
+                     cellY >= 0 &&
+                     cellY < BOARD_HEIGHT &&
+                     _board[cellX][cellY] == piece;                                         // ...and if this cell is of the same type as the one to be placed...
+                     adjacentCount++)                                                       // ...increment our count of adjacent pieces.
+                {
+                    /* Move to the next cell to check. */
+                    cellX += horizontalOffset;
+                    cellY += horizontalOffset * verticalOffset;
+                }
+            }
+
+            /* If we got three or more adjacent pieces, this is a winning move. */
+            if (adjacentCount >= 3)
+            {
+                return true;
+            }
+        }
+
+        /* If we reach this point, it means no winning moves were found. */
+        return false;
+    }
+
     public override string ToString()
     {
         string stringVal = "";
 
         /* Print cells. */
-        for (int rowNum = 0; rowNum < BOARD_HEIGHT; rowNum++)
+        for (int rowNum = BOARD_HEIGHT - 1; rowNum >= 0; rowNum--)
         {
             for (int columnNum = 0; columnNum < BOARD_WIDTH; columnNum++)
             {

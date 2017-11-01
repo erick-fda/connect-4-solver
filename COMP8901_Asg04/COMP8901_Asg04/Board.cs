@@ -53,7 +53,7 @@ public class Board
     private string _moves { get; set; }
     private SysGeneric.List<int> _piecesInColumn { get; set; }
     public bool _isRoundOver { get; set; }
-
+    public char _winner { get; set; }
 
     /*------------------------------------------------------------------------------------
 		Constructors & Destructors
@@ -85,6 +85,7 @@ public class Board
             _piecesInColumn.Add(0);
         }
         _isRoundOver = false;
+        _winner = EMPTY;
     }
 
     /*------------------------------------------------------------------------------------
@@ -142,9 +143,14 @@ public class Board
     private void PlayMove(char piece, int column)
     {
         /* Check if this move will end the game. */
-        if (_moveCount == MAX_MOVES_IN_GAME - 1 || 
-            IsWinningMove(piece, column))
+        if (IsWinningMove(piece, column))
         {
+            _winner = piece;
+            _isRoundOver = true;
+        }
+        else if (_moveCount == MAX_MOVES_IN_GAME - 1)
+        {
+            _winner = EMPTY;
             _isRoundOver = true;
         }
 

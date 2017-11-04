@@ -40,11 +40,12 @@ namespace COMP8901_Asg04
         --------------------------------------------------------------------------------*/
         static private Board _gameBoard { get; set; }
         static private bool _playerGoesFirst { get; set; }
-        static private char _playerPiece { get; set; }
-        static private char _opponentPiece { get; set; }
+        static public char _playerPiece { get; private set; }
+        static public char _opponentPiece { get; private set; }
         static private bool _isGameOver { get; set; }
         static private bool _isMultiplayer { get; set; }
         static private bool _playAgain { get; set; }
+        static private bool _isFirstAiTurn { get; set; }
 
         /*--------------------------------------------------------------------------------
             Main Method
@@ -81,6 +82,7 @@ namespace COMP8901_Asg04
             _isGameOver = false;
             _isMultiplayer = false;
             _playAgain = true;
+            _isFirstAiTurn = true;
         }
 
         /**
@@ -89,6 +91,7 @@ namespace COMP8901_Asg04
         private static void PlayRound()
         {
             _gameBoard = new Board();
+            _isFirstAiTurn = true;
 
             AskMultiplayer();
 
@@ -121,7 +124,7 @@ namespace COMP8901_Asg04
                 else
                 {
                     /* AI's Turn */
-
+                    AiTurn();
                 }
 
                 /* Check if round over. */
@@ -238,12 +241,76 @@ namespace COMP8901_Asg04
                 {
                     int columnToTry = ((int)char.GetNumericValue(response[0])) - 1;
 
-                    if (_gameBoard.TryMove(piece, columnToTry))
+                    /* Try to execute the given move. */
+                    int result = _gameBoard.TryMove(piece, columnToTry);
+
+                    /* If the move was valid, stop asking the player. 
+                        If the move was invalid, print an appropriate message and ask again. */
+                    if (result == Board.MOVE_VALID)
                     {
-                        System.Console.Write(_gameBoard);
                         break;
                     }
+                    else
+                    {
+                        switch (result)
+                        {
+                            case Board.MOVE_INVALID_COLUMN_INVALID:
+                                System.Console.Write("That's not a valid column number! Please enter a valid column number.\n");
+                                break;
+                            case Board.MOVE_INVALID_COLUMN_FULL:
+                                System.Console.Write("That column is full! Please choose another column.\n");
+                                break;
+                            case Board.MOVE_INVALID_ROUND_OVER:
+                                System.Console.Write("Can't play a move because the round is already over.\n");
+                                break;
+                            default:
+                                System.Console.Write("ERROR: Method TryMove() of Board returned something weird!\n");
+                                break;
+                        }
+                    }
                 }
+                else
+                {
+                    System.Console.Write("That was an empty line! Please enter a valid column number.\n");
+                }
+            }
+        }
+
+        /**
+            Plays the AI's turn using the ConnectFourAI class.
+        */
+        private static void AiTurn()
+        {
+            System.Console.Write("<< AI's Turn >>\n\n");
+
+            System.Console.Write(_gameBoard);
+
+            System.Console.Write("AI thinking...\n\n");
+
+            /* Decide which column to play. */
+            int columnToTry = 0;
+
+            /* If this is the first turn, always pick the middle column. */
+            if (_isFirstAiTurn && !_playerGoesFirst)
+            {
+                columnToTry = Board.BOARD_WIDTH / 2;
+                _isFirstAiTurn = false;
+            }
+            /* Otherwise, decide using negamax. */
+            else
+            {
+                columnToTry = ConnectFourAI.SolveWithNegamax(_gameBoard);
+            }
+
+            /* Print the result of the AI's move. */
+            if ((_gameBoard.TryMove(_opponentPiece, columnToTry) == Board.MOVE_VALID))
+            {
+                System.Console.Write(System.String.Format("The AI played column {0}.\n\n", columnToTry + 1));
+            }
+            else
+            {
+                System.Console.Write("ERROR: Uh oh! The AI tried to make an illegal move!");
+                System.Console.ReadLine();
             }
         }
 
@@ -253,7 +320,9 @@ namespace COMP8901_Asg04
         private static void PrintRoundResults()
         {
             /* Print round results. */
-            System.Console.Write("<< ROUND RESULTS >>\n");
+            System.Console.Write("<< ROUND RESULTS >>\n\n");
+
+            System.Console.Write(_gameBoard);
 
             if (_gameBoard._winner == _playerPiece)
             {

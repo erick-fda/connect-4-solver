@@ -72,8 +72,10 @@ public static class ConnectFourAI
         }
 
         /* The starting alpha and beta values are those for losing and winning immediately. */
-        int _alpha = -22 + board._moveCount;
-        int _beta = 22 - board._moveCount;
+        int _alpha = -(42 - board._moveCount);
+        int _beta = 42 - board._moveCount;
+
+        /* If the AI can win by playing a given  */
 
         /* For each column, get the value of moving to that column. */
         int bestMoveColumn = 0;
@@ -174,7 +176,7 @@ public static class ConnectFourAI
     */
     private static int Negamax(Board board, int alpha, int beta, int depth, bool isAiTurn)
     {
-        _cellsConsidered++;
+        //_cellsConsidered++;
         //System.Console.Write(System.String.Format("Cells considered: {0}\n", _cellsConsidered));
 
         /* If the game is already a tie, return 0. */
@@ -203,24 +205,24 @@ public static class ConnectFourAI
             {
                 //System.Console.Write("Found a possibility for a winning game!\n\n");
 
-                /* Winning move was found, so don't bother checking anything worse (if the player) 
+                /* Winning move was found, so don't bother checking anything worse (if the AI) 
                     or better (if the opponent). */
                 if (isAiTurn)
                 {
-                    _alpha = (Board.MAX_MOVES_IN_GAME + 1 - board._moveCount) / 2;
+                    _alpha = (42 - board._moveCount);
                 }
                 else
                 {
-                    _beta = -((Board.MAX_MOVES_IN_GAME + 1 - board._moveCount) / 2);
+                    _beta = -(42 - board._moveCount);
                 }
 
-                return (Board.MAX_MOVES_IN_GAME + 1 - board._moveCount) / 2;
+                return _alpha;
             }
         }
 
         /* If the player can't win on this turn, then the value of this position 
             must be less than an immediate win. */
-        int maxValue = (Board.MAX_MOVES_IN_GAME - 1 - board._moveCount) / 2;
+        int maxValue = (42 - board._moveCount) - 1;
 
         /* If the maximum possible value is less than beta, 
             update beta, as we're not going to find anythign 
@@ -302,175 +304,4 @@ public static class ConnectFourAI
 
         return alpha;
     }
-
-    /** @deprecated Prints out incorrect information. */
-    //private static void PrintMoveInfo(int moveColumn, int moveValue)
-    //{
-    //    /* Print a message on the value of this move. */
-    //    System.Console.Write(System.String.Format("\tAlpha: {0} Beta: {1}\n\n", _alpha, _beta));
-
-    //    /* For winning moves */
-    //    if (moveValue > 0)
-    //    {
-    //        int turnsUntilVictory = (22 - moveValue);
-
-    //        if (turnsUntilVictory > 0)
-    //        {
-    //            System.Console.Write(
-    //                System.String.Format("\tPlaying column {0} will put the AI {1} turns away from victory.\n\n",
-    //                moveColumn + 1, turnsUntilVictory));
-    //        }
-    //        else
-    //        {
-    //            System.Console.Write(
-    //                System.String.Format("\tPlaying column {0} will win the game for the AI.\n\n",
-    //                moveColumn + 1));
-    //        }
-    //    }
-    //    /* For losing moves */
-    //    else if (moveValue < 0)
-    //    {
-    //        int turnsUntilDefeat = (22 + moveValue);
-
-    //        if (turnsUntilDefeat > 0)
-    //        {
-    //            System.Console.Write(
-    //                System.String.Format("\tPlaying column {0} will put the AI {1} turns away from defeat.\n\n",
-    //                moveColumn + 1, turnsUntilDefeat));
-    //        }
-    //        else
-    //        {
-    //            System.Console.Write(
-    //                System.String.Format("\tPlaying column {0} will lose the game for the AI.\n\n",
-    //                moveColumn + 1));
-    //        }
-    //    }
-    //    /* For tying moves */
-    //    else
-    //    {
-    //        System.Console.Write(
-    //            System.String.Format("\tPlaying column {0} will tie the game.\n\n",
-    //            moveColumn + 1));
-    //    }
-    //}
-
-    /** @deprecated Old version of the negamax function. */
-    //private static int Negamax(Board board, int alpha, int beta, bool _isTop)
-    //{
-    //    _cellsConsidered++;
-    //    //System.Console.Write(System.String.Format("Cells considered: {0}\n", _cellsConsidered));
-
-    //    /* Difficulty */
-    //    if (_cellsConsidered >= _cellsPerColumn)
-    //    {
-    //        if (_isTop)
-    //        {
-    //            _alpha = alpha;
-    //            _beta = beta;
-    //        }
-
-    //        return alpha;
-    //    }
-
-    //    /* If the game is already a tie, return 0. */
-    //    if (board._isRoundOver && board._winner == Board.TIE_GAME)
-    //    {
-    //        if (_isTop)
-    //        {
-    //            _alpha = alpha;
-    //            _beta = beta;
-    //        }
-
-    //        return 0;
-    //    }
-
-    //    /* If the player can win with this move, return the appropriate value. */
-    //    for (int eachColumn = 0; eachColumn < Board.BOARD_WIDTH; eachColumn++)
-    //    {
-    //        if (board.IsMoveValid(eachColumn) == Board.MOVE_VALID && 
-    //            board.IsWinningMove(board._nextTurn, eachColumn))
-    //        {
-    //            return (Board.MAX_MOVES_IN_GAME + 1 - board._moveCount) / 2;
-    //        }
-    //    }
-
-    //    /* If the player can't win on this turn, then the value of this position 
-    //        must be less than an immediate win. */
-    //    int maxValue = (Board.MAX_MOVES_IN_GAME - 1 - board._moveCount) / 2;
-
-    //    /* If the maximum possible value is less than beta, 
-    //        update beta, as we're not going to find anythign 
-    //        better than this for the current move being considered.
-
-    //        If alpha and beta converge, return the new beta. */
-    //    if (maxValue < beta)
-    //    {
-    //        beta = maxValue;
-
-    //        if (alpha >= beta)
-    //        {
-    //            if (_isTop)
-    //            {
-    //                _alpha = alpha;
-    //                _beta = beta;
-    //            }
-
-    //            return beta;
-    //        }
-    //    }
-
-    //    /* Look at each of the possible moves after this one (in column priority order) 
-    //        and pick the best one. */
-    //    for (int eachMove = 0; eachMove < Board.BOARD_WIDTH; eachMove++)
-    //    {
-    //        /* If the move is valid... */
-    //        if (board.IsMoveValid(_columnPriorities[eachMove]) == Board.MOVE_VALID)
-    //        {
-    //            /* Create a new board that represents the move. */
-    //            Board eachMoveBoard = new Board(board);
-    //            eachMoveBoard.TryMove(_columnPriorities[eachMove]);
-
-    //            /* Get the value of the board after the next move. 
-                    
-    //                Note that the board is evaluated for the OTHER player 
-    //                (since it would be their turn next), which is why the 
-    //                alpha and beta are reversed and negated. The overall 
-    //                score is then negated again to get the value of the board 
-    //                for the CURRENT player. */
-    //            int eachBoardValue = -Negamax(eachMoveBoard, -beta, -alpha, false);
-
-    //            /* If the value for this move can match the current beta, 
-    //                keep this value, as it's the best we're going to get searching 
-    //                this move. */
-    //            if (eachBoardValue >= beta)
-    //            {
-    //                if (_isTop)
-    //                {
-    //                    _alpha = alpha;
-    //                    _beta = beta;
-    //                }
-
-    //                return eachBoardValue;
-    //            }
-
-    //            /* If the value for this move is greater than the current alpha, 
-    //                update alpha, as we don't need to consider moves with a lower value 
-    //                than this one. */
-    //            if (eachBoardValue > alpha)
-    //            {
-    //                alpha = eachBoardValue;
-    //            }
-    //        }
-    //    }
-
-    //    /* After considering all of our options, return alpha, 
-    //        which is essentially our worst-case projection for this move. */
-    //    if (_isTop)
-    //    {
-    //        _alpha = alpha;
-    //        _beta = beta;
-    //    }
-
-    //    return alpha;
-    //}
 }

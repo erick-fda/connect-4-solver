@@ -72,10 +72,62 @@ public static class ConnectFourAI
         }
 
         /* The starting alpha and beta values are those for losing and winning immediately. */
-        int _alpha = -(42 - board._moveCount);
-        int _beta = 42 - board._moveCount;
+        int _alpha = -(Board.MAX_MOVES_IN_GAME - board._moveCount);
+        int _beta = Board.MAX_MOVES_IN_GAME - board._moveCount;
 
-        /* If the AI can win by playing a given  */
+        /* If the AI can win by playing a given column, play that column. */
+        foreach (int eachMoveColumn in _columnPriorities)
+        {
+            if (_validMoves.Contains(eachMoveColumn))
+            {
+                if (board.IsWinningMove(COMP8901_Asg04.Program._opponentPiece, eachMoveColumn))
+                {
+                    return eachMoveColumn;
+                }
+            }
+        }
+
+        /* If the player is about to win on a given column, play that column. */
+        foreach (int eachMoveColumn in _columnPriorities)
+        {
+            if (_validMoves.Contains(eachMoveColumn))
+            {
+                if (board.IsWinningMove(COMP8901_Asg04.Program._playerPiece, eachMoveColumn))
+                {
+                    //System.Console.Write(
+                    //    System.String.Format("Trying to win on column {0}, eh? I'll block you!\n\n",
+                    //    eachMoveColumn + 1));
+                    return eachMoveColumn;
+                }
+            }
+        }
+
+        /* If the player can win on a given column in two turns, play that column. */
+        foreach (int eachMoveColumn in _columnPriorities)
+        {
+            if (_validMoves.Contains(eachMoveColumn))
+            {
+                if (board.IsAlmostWinningMove(COMP8901_Asg04.Program._playerPiece, eachMoveColumn))
+                {
+                    /* Create a new board that represents the move. */
+                    Board eachMoveBoard = new Board(board);
+                    eachMoveBoard.TryMove(COMP8901_Asg04.Program._playerPiece, eachMoveColumn);
+
+                    /* See if the player could win on the turn after. */
+                    foreach (int eachNextColumn in _validMoves)
+                    {
+                        if (eachMoveBoard.IsMoveValid(eachNextColumn) == Board.MOVE_VALID &&
+                            eachMoveBoard.IsWinningMove(COMP8901_Asg04.Program._playerPiece, eachNextColumn))
+                        {
+                            //System.Console.Write(
+                            //    System.String.Format("Trying to win on column {0}, eh? I'll block you!\n\n",
+                            //    eachMoveColumn + 1));
+                            return eachMoveColumn;
+                        }
+                    }
+                }
+            }
+        }
 
         /* For each column, get the value of moving to that column. */
         int bestMoveColumn = 0;
@@ -209,11 +261,11 @@ public static class ConnectFourAI
                     or better (if the opponent). */
                 if (isAiTurn)
                 {
-                    _alpha = (42 - board._moveCount);
+                    _alpha = (Board.MAX_MOVES_IN_GAME - board._moveCount);
                 }
                 else
                 {
-                    _beta = -(42 - board._moveCount);
+                    _beta = -(Board.MAX_MOVES_IN_GAME - board._moveCount);
                 }
 
                 return _alpha;
@@ -222,7 +274,7 @@ public static class ConnectFourAI
 
         /* If the player can't win on this turn, then the value of this position 
             must be less than an immediate win. */
-        int maxValue = (42 - board._moveCount) - 1;
+        int maxValue = (Board.MAX_MOVES_IN_GAME - board._moveCount) - 1;
 
         /* If the maximum possible value is less than beta, 
             update beta, as we're not going to find anythign 

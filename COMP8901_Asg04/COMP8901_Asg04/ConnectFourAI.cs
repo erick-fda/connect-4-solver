@@ -32,8 +32,8 @@ public static class ConnectFourAI
     /*------------------------------------------------------------------------------------
 		Class Fields
 	------------------------------------------------------------------------------------*/
-    private const int MAX_DEPTH_TO_SEARCH = 15; // 7.5 s on first turn
-    //private const int MAX_DEPTH_TO_SEARCH = 14; // 2.9 s on first turn
+    private const int MAX_DEPTH_TO_SEARCH = 15; // 5 s on first turn.
+    //private const int MAX_DEPTH_TO_SEARCH = 16; // 18 s on first turn.
 
     /*------------------------------------------------------------------------------------
 		Class Properties

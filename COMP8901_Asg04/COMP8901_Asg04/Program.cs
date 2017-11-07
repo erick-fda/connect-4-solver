@@ -45,7 +45,6 @@ namespace COMP8901_Asg04
         static private bool _isGameOver { get; set; }
         static private bool _isMultiplayer { get; set; }
         static private bool _playAgain { get; set; }
-        static private bool _isFirstAiTurn { get; set; }
 
         /*--------------------------------------------------------------------------------
             Main Method
@@ -82,7 +81,6 @@ namespace COMP8901_Asg04
             _isGameOver = false;
             _isMultiplayer = false;
             _playAgain = true;
-            _isFirstAiTurn = true;
         }
 
         /**
@@ -91,7 +89,6 @@ namespace COMP8901_Asg04
         private static void PlayRound()
         {
             _gameBoard = new Board();
-            _isFirstAiTurn = true;
 
             AskMultiplayer();
 
@@ -289,18 +286,7 @@ namespace COMP8901_Asg04
 
             /* Decide which column to play. */
             int columnToTry = 0;
-
-            /* If this is the first turn, always pick the middle column. */
-            if (_isFirstAiTurn && !_playerGoesFirst)
-            {
-                columnToTry = Board.BOARD_WIDTH / 2;
-                _isFirstAiTurn = false;
-            }
-            /* Otherwise, decide using negamax. */
-            else
-            {
-                columnToTry = ConnectFourAI.SolveWithNegamax(_gameBoard);
-            }
+            columnToTry = ConnectFourAI.SolveWithNegamax(_gameBoard);
 
             /* Print the result of the AI's move. */
             if ((_gameBoard.TryMove(_opponentPiece, columnToTry) == Board.MOVE_VALID))

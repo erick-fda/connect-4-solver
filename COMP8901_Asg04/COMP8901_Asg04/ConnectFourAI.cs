@@ -75,63 +75,9 @@ public static class ConnectFourAI
         int _alpha = -(Board.MAX_MOVES_IN_GAME - board._moveCount);
         int _beta = Board.MAX_MOVES_IN_GAME - board._moveCount;
 
-        /* If the AI can win by playing a given column, play that column. */
-        foreach (int eachMoveColumn in _columnPriorities)
-        {
-            if (_validMoves.Contains(eachMoveColumn))
-            {
-                if (board.IsWinningMove(COMP8901_Asg04.Program._opponentPiece, eachMoveColumn))
-                {
-                    return eachMoveColumn;
-                }
-            }
-        }
-
-        /* If the player is about to win on a given column, play that column. */
-        foreach (int eachMoveColumn in _columnPriorities)
-        {
-            if (_validMoves.Contains(eachMoveColumn))
-            {
-                if (board.IsWinningMove(COMP8901_Asg04.Program._playerPiece, eachMoveColumn))
-                {
-                    //System.Console.Write(
-                    //    System.String.Format("Trying to win on column {0}, eh? I'll block you!\n\n",
-                    //    eachMoveColumn + 1));
-                    return eachMoveColumn;
-                }
-            }
-        }
-
-        /* If the player can win on a given column in two turns, play that column. */
-        foreach (int eachMoveColumn in _columnPriorities)
-        {
-            if (_validMoves.Contains(eachMoveColumn))
-            {
-                if (board.IsAlmostWinningMove(COMP8901_Asg04.Program._playerPiece, eachMoveColumn))
-                {
-                    /* Create a new board that represents the move. */
-                    Board eachMoveBoard = new Board(board);
-                    eachMoveBoard.TryMove(COMP8901_Asg04.Program._playerPiece, eachMoveColumn);
-
-                    /* See if the player could win on the turn after. */
-                    foreach (int eachNextColumn in _validMoves)
-                    {
-                        if (eachMoveBoard.IsMoveValid(eachNextColumn) == Board.MOVE_VALID &&
-                            eachMoveBoard.IsWinningMove(COMP8901_Asg04.Program._playerPiece, eachNextColumn))
-                        {
-                            //System.Console.Write(
-                            //    System.String.Format("Trying to win on column {0}, eh? I'll block you!\n\n",
-                            //    eachMoveColumn + 1));
-                            return eachMoveColumn;
-                        }
-                    }
-                }
-            }
-        }
-
         /* For each column, get the value of moving to that column. */
         int bestMoveColumn = 0;
-        int bestMoveValue = -100;
+        int bestMoveValue = -Board.MAX_MOVES_IN_GAME;
 
         foreach (int eachMoveColumn in _columnPriorities)
         {
@@ -228,23 +174,13 @@ public static class ConnectFourAI
     */
     private static int Negamax(Board board, int alpha, int beta, int depth, bool isAiTurn)
     {
-        //_cellsConsidered++;
-        //System.Console.Write(System.String.Format("Cells considered: {0}\n", _cellsConsidered));
-
         /* If the game is already a tie, return 0. */
         if (board._isRoundOver && board._winner == Board.TIE_GAME)
         {
             //System.Console.Write("Found a possibility for a tie game!\n\n");
 
             /* We can tie, so don't bother checking anything worse than a tie. */
-            if (isAiTurn)
-            {
-                _alpha = 0;
-            }
-            else
-            {
-                _beta = 0;
-            }
+            TrySetAlpha(0);
 
             return 0;
         }
@@ -257,18 +193,12 @@ public static class ConnectFourAI
             {
                 //System.Console.Write("Found a possibility for a winning game!\n\n");
 
-                /* Winning move was found, so don't bother checking anything worse (if the AI) 
-                    or better (if the opponent). */
-                if (isAiTurn)
-                {
-                    _alpha = (Board.MAX_MOVES_IN_GAME - board._moveCount);
-                }
-                else
-                {
-                    _beta = -(Board.MAX_MOVES_IN_GAME - board._moveCount);
-                }
+                /* Set alpha appropriately before returning. */
+                TrySetAlpha(isAiTurn ? 
+                    (Board.MAX_MOVES_IN_GAME - board._moveCount) : 
+                    -(Board.MAX_MOVES_IN_GAME - board._moveCount));
 
-                return _alpha;
+                return (Board.MAX_MOVES_IN_GAME - board._moveCount);
             }
         }
 
@@ -287,9 +217,8 @@ public static class ConnectFourAI
 
             if (alpha >= beta)
             {
-                /* Set alpha and beta appropriately before returning. */
-                _alpha = isAiTurn ? alpha : -beta;
-                _beta = isAiTurn ? beta : -alpha;
+                /* Set alpha appropriately before returning. */
+                TrySetAlpha(isAiTurn ? beta : -beta);
 
                 return beta;
             }
@@ -300,9 +229,8 @@ public static class ConnectFourAI
         {
             //System.Console.Write(System.String.Format("Reached maximum depth of {0}!\n", depth));
 
-            /* Set alpha and beta appropriately before returning. */
-            _alpha = isAiTurn ? alpha : -beta;
-            _beta = isAiTurn ? beta : -alpha;
+            /* Set alpha appropriately before returning. */
+            TrySetAlpha(isAiTurn ? alpha : -alpha);
 
             return alpha;
         }
@@ -332,9 +260,8 @@ public static class ConnectFourAI
                     this move. */
                 if (eachBoardValue >= beta)
                 {
-                    /* Set alpha and beta appropriately before returning. */
-                    _alpha = isAiTurn ? alpha : -beta;
-                    _beta = isAiTurn ? beta : -alpha;
+                    /* Set alpha appropriately before returning. */
+                    TrySetAlpha(isAiTurn ? eachBoardValue : -eachBoardValue);
 
                     return eachBoardValue;
                 }
@@ -349,11 +276,33 @@ public static class ConnectFourAI
             }
         }
 
+        /* Set alpha appropriately before returning. */
+        TrySetAlpha(isAiTurn ? alpha : -alpha);
+
         /* After considering all of our options, return alpha, 
             which is essentially our worst-case projection for this move. */
-        _alpha = isAiTurn ? alpha : -beta;
-        _beta = isAiTurn ? beta : -alpha;
-
         return alpha;
+    }
+
+    /**
+        Set alpha to the given value if it is higher than the current alpha.
+    */
+    private static void TrySetAlpha(int candidate)
+    {
+        if (candidate > _alpha)
+        {
+            _alpha = candidate;
+        }
+    }
+
+    /**
+        Set beta to the given value if it is lower than the current beta.
+    */
+    private static void TrySetBeta(int candidate)
+    {
+        if (candidate < _beta)
+        {
+            _beta = candidate;
+        }
     }
 }

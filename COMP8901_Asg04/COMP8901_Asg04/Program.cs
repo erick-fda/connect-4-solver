@@ -39,7 +39,7 @@ namespace COMP8901_Asg04
             Class Properties
         --------------------------------------------------------------------------------*/
         static private Board _gameBoard { get; set; }
-        static private bool _playerGoesFirst { get; set; }
+        static public bool _playerGoesFirst { get; private set; }
         static public char _playerPiece { get; private set; }
         static public char _opponentPiece { get; private set; }
         static private bool _isGameOver { get; set; }

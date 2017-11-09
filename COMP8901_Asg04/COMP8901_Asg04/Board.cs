@@ -49,6 +49,9 @@ public class Board
     public const int MAX_MOVES_IN_GAME = BOARD_WIDTH * BOARD_HEIGHT;
     public const char TIE_GAME = EMPTY_CELL;
 
+    public const int MAX_SCORE_FOR_PLAYER = (7 * 4) + (4 * 7) + (4 * 4) + (4 * 4);
+    public const int HIGH_SCORE = 1000;
+    
     /*------------------------------------------------------------------------------------
 		Instance Properties
 	------------------------------------------------------------------------------------*/
@@ -59,6 +62,9 @@ public class Board
     private SysGeneric.List<int> _piecesInColumn { get; set; }
     public bool _isRoundOver { get; private set; }
     public char _winner { get; private set; }
+    public double _player1Score { get; private set; }
+    public double _player2Score { get; private set; }
+    public int[,] _winningCombinationsPerCell { get; private set; }
 
     /* Returns what the next piece to play should be, 
         based on the number of turns so far.*/
@@ -103,6 +109,17 @@ public class Board
         }
         _isRoundOver = false;
         _winner = TIE_GAME;
+        _player1Score = MAX_SCORE_FOR_PLAYER;
+        _player2Score = MAX_SCORE_FOR_PLAYER;
+        _winningCombinationsPerCell = new int[,] {
+            { 3, 4, 5, 5, 4, 3 },
+            { 4, 6, 7, 7, 6, 4 },
+            { 5, 8, 11, 11, 8, 5 },
+            { 7, 10, 13, 13, 10, 7 },
+            { 5, 8, 11, 11, 8, 5 },
+            { 4, 6, 7, 7, 6, 4 },
+            { 3, 4, 5, 5, 4, 3 },
+        };
     }
 
     /**
@@ -117,6 +134,17 @@ public class Board
         _piecesInColumn = new SysGeneric.List<int>(otherBoard._piecesInColumn);
         _isRoundOver = otherBoard._isRoundOver;
         _winner = otherBoard._winner;
+        _player1Score = otherBoard._player1Score;
+        _player2Score = otherBoard._player2Score;
+        _winningCombinationsPerCell = new int[,] {
+            { 3, 4, 5, 5, 4, 3 },
+            { 4, 6, 7, 7, 6, 4 },
+            { 5, 8, 11, 11, 8, 5 },
+            { 7, 10, 13, 13, 10, 7 },
+            { 5, 8, 11, 11, 8, 5 },
+            { 4, 6, 7, 7, 6, 4 },
+            { 3, 4, 5, 5, 4, 3 },
+        };
     }
 
     /*------------------------------------------------------------------------------------
@@ -185,6 +213,18 @@ public class Board
         {
             _winner = TIE_GAME;
             _isRoundOver = true;
+        }
+
+        /* Update player score. */
+        /* If player 1 is playing, decrement player 2's score. */
+        if (piece == PLAYER_1_PIECE)
+        {
+            _player2Score -= _winningCombinationsPerCell[column, _piecesInColumn[column]];
+        }
+        /* If player 2 is playing, decrement player 1's score. */
+        else
+        {
+            _player1Score -= _winningCombinationsPerCell[column, _piecesInColumn[column]];
         }
 
         /* Play the move. */

@@ -40,8 +40,8 @@ public static class ConnectFourAI
 	------------------------------------------------------------------------------------*/
     private static int _cellsConsidered { get; set; }
     private static SysGeneric.List<int> _columnPriorities { get; set; }
-    private static int _alpha { get; set; }
-    private static int _beta { get; set; }
+    private static double _alpha { get; set; }
+    private static double _beta { get; set; }
     private static SysGeneric.List<int> _validMoves { get; set; }
     private static int _cellsPerColumn { get; set; }
 
@@ -71,13 +71,13 @@ public static class ConnectFourAI
             }
         }
 
-        /* The starting alpha and beta values are those for losing and winning immediately. */
-        int _alpha = -(Board.MAX_MOVES_IN_GAME - board._moveCount);
-        int _beta = Board.MAX_MOVES_IN_GAME - board._moveCount;
+        /* The starting alpha and beta values are those for losing and winning. */
+        _alpha = -Board.HIGH_SCORE;
+        _beta = Board.HIGH_SCORE;
 
         /* For each column, get the value of moving to that column. */
         int bestMoveColumn = 0;
-        int bestMoveValue = -Board.MAX_MOVES_IN_GAME;
+        double bestMoveValue = -Board.HIGH_SCORE;
 
         foreach (int eachMoveColumn in _columnPriorities)
         {
@@ -86,16 +86,16 @@ public static class ConnectFourAI
             /* If the move is valid... */
             if (_validMoves.Contains(eachMoveColumn))
             {
-                //System.Console.Write(System.String.Format("Considering column {0}...\n\n", eachMoveColumn + 1));
+                System.Console.Write(System.String.Format("Considering column {0}...\n\n", eachMoveColumn + 1));
 
                 /* Create a new board that represents the move. */
                 Board eachMoveBoard = new Board(board);
                 eachMoveBoard.TryMove(COMP8901_Asg04.Program._opponentPiece, eachMoveColumn);
 
                 /* Get the value of the board after the move. */
-                int eachMoveValue = -Negamax(eachMoveBoard, -_beta, -_alpha, 1, false);
+                double eachMoveValue = -Negamax(eachMoveBoard, -_beta, -_alpha, 1, false);
 
-                //System.Console.Write(System.String.Format("\tValue of column {0} is {1}.\n\n", eachMoveColumn + 1, eachMoveValue));
+                System.Console.Write(System.String.Format("\tValue of column {0} is {1}.\n\n", eachMoveColumn + 1, eachMoveValue));
 
                 /* If this is the first option or better than all previous options, it's the best one so far. 
 
@@ -105,14 +105,13 @@ public static class ConnectFourAI
                 {
                     bestMoveValue = eachMoveValue;
                     bestMoveColumn = eachMoveColumn;
-                    //System.Console.Write(System.String.Format("\tColumn {0} is the best move so far.\n\n", eachMoveColumn + 1));
+                    System.Console.Write(System.String.Format("\tColumn {0} is the best move so far.\n\n", eachMoveColumn + 1));
                 }
 
                 /* No need to check for moves worse than this one. */
                 if (_alpha < bestMoveValue)
                 {
                     _alpha = bestMoveValue;
-                    //PrintMoveInfo(eachMoveColumn, eachMoveValue);
                 }
 
             }
@@ -172,7 +171,7 @@ public static class ConnectFourAI
         the game is possible. Else, it will be the move that loses as late in the game 
         as possible.
     */
-    private static int Negamax(Board board, int alpha, int beta, int depth, bool isAiTurn)
+    private static double Negamax(Board board, double alpha, double beta, int depth, bool isAiTurn)
     {
         /* If the game is already a tie, return 0. */
         if (board._isRoundOver && board._winner == Board.TIE_GAME)
@@ -193,46 +192,76 @@ public static class ConnectFourAI
             {
                 //System.Console.Write("Found a possibility for a winning game!\n\n");
 
+                ///* Set alpha appropriately before returning. */
+                //TrySetAlpha(isAiTurn ?
+                //    (Board.HIGH_SCORE) :
+                //    -(Board.HIGH_SCORE));
+
                 /* Set alpha appropriately before returning. */
-                TrySetAlpha(isAiTurn ? 
-                    (Board.MAX_MOVES_IN_GAME - board._moveCount) : 
+                TrySetAlpha(isAiTurn ?
+                    (Board.MAX_MOVES_IN_GAME - board._moveCount) :
                     -(Board.MAX_MOVES_IN_GAME - board._moveCount));
+
+                //return Board.HIGH_SCORE;
 
                 return (Board.MAX_MOVES_IN_GAME - board._moveCount);
             }
         }
 
-        /* If the player can't win on this turn, then the value of this position 
-            must be less than an immediate win. */
-        int maxValue = (Board.MAX_MOVES_IN_GAME - board._moveCount) - 1;
+        ///* If the player can't win on this turn, then the value of this position 
+        //    must be less than an immediate win. */
+        //int maxValue = (Board.MAX_MOVES_IN_GAME - board._moveCount) - 1;
 
-        /* If the maximum possible value is less than beta, 
-            update beta, as we're not going to find anythign 
-            better than this for the current move being considered.
+        ///* If the maximum possible value is less than beta, 
+        //    update beta, as we're not going to find anythign 
+        //    better than this for the current move being considered.
 
-            If alpha and beta converge, return the new beta. */
-        if (maxValue < beta)
-        {
-            beta = maxValue;
+        //    If alpha and beta converge, return the new beta. */
+        //if (maxValue < beta)
+        //{
+        //    beta = maxValue;
 
-            if (alpha >= beta)
-            {
-                /* Set alpha appropriately before returning. */
-                TrySetAlpha(isAiTurn ? beta : -beta);
+        //    if (alpha >= beta)
+        //    {
+        //        /* Set alpha appropriately before returning. */
+        //        TrySetAlpha(isAiTurn ? beta : -beta);
 
-                return beta;
-            }
-        }
+        //        return beta;
+        //    }
+        //}
 
-        /* If we're at the maximum search depth, just return the current alpha. */
+        /* If we're at the maximum search depth, return the board's score for the current player. */
         if (depth >= MAX_DEPTH_TO_SEARCH)
         {
             //System.Console.Write(System.String.Format("Reached maximum depth of {0}!\n", depth));
 
-            /* Set alpha appropriately before returning. */
-            TrySetAlpha(isAiTurn ? alpha : -alpha);
+            double score = alpha;
 
-            return alpha;
+            /* Get the score of the board for the current player. */
+            /* If this is the AI's turn and the player went first, OR
+                this is the player's turn and the player went second, THEN 
+                we want the score for player two. */
+            if (isAiTurn == (COMP8901_Asg04.Program._playerGoesFirst))
+            {
+                score = board._player2Score / 100;
+            }
+            /* If this is the AI's turn and the player went second, OR
+                this is the player's turn and the player went first, THEN 
+                we want the score for player one. */
+            else
+            {
+                score = board._player1Score / 100;
+            }
+
+            /* Set alpha appropriately before returning. */
+            TrySetAlpha(isAiTurn ? score : -score);
+
+            return score;
+
+            ///* Set alpha appropriately before returning. */
+            //TrySetAlpha(isAiTurn ? alpha : -alpha);
+
+            //return alpha;
         }
 
         /* Look at each of the possible moves after this one (in column priority order) 
@@ -253,7 +282,7 @@ public static class ConnectFourAI
                     alpha and beta are reversed and negated. The overall 
                     score is then negated again to get the value of the board 
                     for the CURRENT player. */
-                int eachBoardValue = -Negamax(eachMoveBoard, -beta, -alpha, depth + 1, !isAiTurn);
+                double eachBoardValue = -Negamax(eachMoveBoard, -beta, -alpha, depth + 1, !isAiTurn);
 
                 /* If the value for this move can match the current beta, 
                     keep this value, as it's the best we're going to get searching 
@@ -287,7 +316,7 @@ public static class ConnectFourAI
     /**
         Set alpha to the given value if it is higher than the current alpha.
     */
-    private static void TrySetAlpha(int candidate)
+    private static void TrySetAlpha(double candidate)
     {
         if (candidate > _alpha)
         {
@@ -298,7 +327,7 @@ public static class ConnectFourAI
     /**
         Set beta to the given value if it is lower than the current beta.
     */
-    private static void TrySetBeta(int candidate)
+    private static void TrySetBeta(double candidate)
     {
         if (candidate < _beta)
         {
